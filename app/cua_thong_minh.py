@@ -1,81 +1,73 @@
 
-import sys
+import sys, queue
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QFormLayout, QVBoxLayout, QMainWindow, QAction
-from PyQt5.QtCore import Qt, pyqtSignal, QThread
-import login, xoa_van_tay, them_van_tay
-
-class SmartDoor(QMainWindow):
-    def __init__(self) -> None:
+from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QFormLayout, QVBoxLayout
+from PyQt5.QtCore import  Qt, pyqtSignal, QThread, QTimer
+from . import modules
+class DeltaisThread(QThread):
+    def __init__(self, ser) -> None:
         super().__init__()
-        self.UIinit()
-        self.toolbar = self.addToolBar('Công cụ')
-        action1 = QAction('Đăng xuất', self)
-        action1.triggered.connect(self.switchToWindowLogin)
-        self.toolbar.addAction(action1)
-        action2 = QAction('Cửa thông minh', self)
-        action2.triggered.connect(self.switchToWindowSmartDoor)
-        self.toolbar.addAction(action2)
-        action3 = QAction('Xóa vân tay', self)
-        action3.triggered.connect(self.switchToWindowAdd)
-        self.toolbar.addAction(action3)
-        action4 = QAction('Tạo vân tay', self)
-        action4.triggered.connect(self.switchToWindowDelete)
-        self.toolbar.addAction(action4)
-    def UIinit(self):
-        self.central_widget = QWidget()  # Tạo widget trung tâm
-        self.setCentralWidget(self.central_widget)  # Đặt widget trung tâm cho QMainWindow
-        
+        self.ser = ser
+    input = pyqtSignal(str)
+    
+    def run(self):
+        while True:
+            key = self.ser.readline().decode().strip()
+            self.input.emit(key)
+    
+
+class Details(QWidget):
+    def __init__(self, ser) -> None:
+        super().__init__()
         self.vbox = QVBoxLayout()
         self.fbox = QFormLayout()
-        f1 = QFont("Arial", 15)
-        f1.setBold(True)
-        
-        self.l1 = QLabel(text="Trạng thái cửa: ")
-        self.l1.setFont(f1)
-        
-        self.status_door = QLabel("Đóng")
-        self.status_door.setFixedSize(80,40)
-        self.status_door.setStyleSheet("color :red")
-        self.status_door.setFont(f1)
-        
-        self.fbox.addRow(self.l1,self.status_door)
-        
-        self.l2 = QLabel(f"ID vân tay {self.status_door.text().lower()} cửa: ")
-        self.l2.setFont(f1)
-        
-        self.id = QLabel("1")
+        self.ser = ser
+        self.UIinit()
+
+    def UIinit(self):
+        self.queueMain = queue.Queue()
+        #Tạo font
+        self.f2 = QFont("Arial", 15)
+        self.f2.setBold(True)
+        #Trạng thái cửa
+        self.labelStatusDoor = QLabel(text="Trạng thái cửa: ")
+        self.labelStatusDoor.setFont(self.f2)
+        self.statusDoor = QLabel()
+        self.statusDoor.setFixedSize(80,40)
+        self.statusDoor.setStyleSheet("color :red")
+        self.statusDoor.setFont(self.f2)
+        self.fbox.addRow(self.labelStatusDoor,self.statusDoor)
+        #ID
+        self.labelDetailIdDoor = QLabel(f"ID vân tay {self.statusDoor.text().lower()} cửa: ")
+        self.labelDetailIdDoor.setFont(self.f2)
+        self.id = QLabel()
         self.id.setFixedSize(80,40)
-        self.id.setFont(f1)
+        self.id.setFont(self.f2)
+        self.fbox.addRow(self.labelDetailIdDoor,self.id)
+        #Thực hiện xử lý hiển thị
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update)
+        self.timer.start(100)
+        self.threadInput = DeltaisThread(self.ser)
+        self.threadInput.input.connect(self.processInput)
+        self.threadInput.start()
         
-        self.fbox.addRow(self.l2,self.id)
         
         self.fbox.setFormAlignment(Qt.AlignHCenter)
         self.fbox.setFormAlignment(Qt.AlignVCenter)
         
+        self.setLayout(self.vbox)
         self.vbox.addLayout(self.fbox)
         
-        self.setGeometry(750,250,400,440)
-        self.setWindowTitle("Hệ thống mở cửa thông minh")
-        self.central_widget.setLayout(self.vbox)
-        self.show()
-        
-    def switchToWindowLogin(self):
-        self.currentWindow = None
-        self.login = login.LoginWindow()
-        self.close()
-        self.login.show()
-    def switchToWindowSmartDoor(self):
-        self.UIinit()
-    def switchToWindowDelete(self):
-        self.xoa = them_van_tay.Add()
-        self.setCentralWidget(self.xoa)
-        self.currentWindow = self.xoa
-    def switchToWindowAdd(self):
-        self.them = xoa_van_tay.Delete()
-        self.setCentralWidget(self.them)
-        self.currentWindow = self.them
+    def processInput(self, key):
+        self.queueMain.put(key) 
+    def update(self):
+        if not self.queueMain.empty():
+            data = self.queueMain.get()
+            self.statusDoor.setText("Đóng" if (data[1] == "0") else "Mở")
+            self.id.setText(data[0])
 if __name__ == "__main__" :
     app = QApplication(sys.argv)
-    my_app = SmartDoor()
+    my_app = Details()
+    my_app.show()
     sys.exit(app.exec_())

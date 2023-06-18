@@ -3,33 +3,31 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QApplication, QLabel, QLineEdit, QPushButton, QWidget, QFormLayout, QVBoxLayout, QMainWindow
 from PyQt5.QtCore import Qt
 
-class Delete(QMainWindow):
+class Delete(QWidget):
     def __init__(self): 
         super().__init__()
         self.UIInit()
 
     def UIInit(self):
-        self.central_widget = QWidget()  # Tạo widget trung tâm
-        self.setCentralWidget(self.central_widget)  # Đặt widget trung tâm cho QMainWindow
         
         self.vbox = QVBoxLayout()
         self.fbox = QFormLayout()
 
-        self.f1 = QFont("Arial", 15)
-        self.f1.setBold(True)
-        self.l1 = QLabel("Nhập ID vân tay xóa: ")
-        self.l1.setFont(self.f1)
+        self.f2 = QFont("Arial", 15)
+        self.f2.setBold(True)
+        self.labelDetailIdDelete = QLabel("Nhập ID vân tay xóa: ")
+        self.labelDetailIdDelete.setFont(self.f2)
         
-        self.text = QLineEdit()
-        self.text.returnPressed.connect(self.get_id)
-        self.text.setFixedSize(70,30)
+        self.textDetailIdDelete = QLineEdit()
+        self.textDetailIdDelete.returnPressed.connect(self.get_id)
+        self.textDetailIdDelete.setFixedSize(70,30)
         
-        self.fbox.addRow(self.l1, self.text)
+        self.fbox.addRow(self.labelDetailIdDelete, self.textDetailIdDelete)
 
         
         self.but = QPushButton("Gửi", self)
         self.but.move(150,250)
-        self.but.setFont(self.f1)
+        self.but.setFont(self.f2)
         self.but.setFixedSize(80, 40)
         self.but.clicked.connect(self.get_id)
 
@@ -37,17 +35,18 @@ class Delete(QMainWindow):
         self.fbox.setFormAlignment(Qt.AlignVCenter)
 
         self.vbox.addLayout(self.fbox)
-        
-        self.setGeometry(750, 250, 400, 440)
-        self.setWindowTitle("Hệ thống mở cửa thông minh")
-        self.central_widget.setLayout(self.vbox)  # Đặt QVBoxLayout làm layout cho widget trung tâm
-        self.show()
+        self.setLayout(self.vbox)
+        # self.setGeometry(750, 250, 400, 440)
+        # self.setWindowTitle("Hệ thống mở cửa thông minh")
+        # self.central_widget.setLayout(self.vbox)
+        # self.show()
         
     def get_id(self):
-        self.input_id = self.text.text()
-        print (self.input_id)
+        self.idDelete = self.textDetailIdDelete.text()
+        print (self.idDelete)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     my_app = Delete()
+    my_app.show()
     sys.exit(app.exec_())

@@ -1,79 +1,98 @@
 import sys
-from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QApplication, QLabel, QLineEdit, QPushButton, QFormLayout, QVBoxLayout, QMainWindow, QWidget
-from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5.QtCore import QThread, pyqtSignal
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit, QToolBar
 
 
-class LoginWindow(QMainWindow):
-    def __init__(self) -> None:
+class WorkerThread(QThread):
+    data_processed = pyqtSignal(str)
+
+    def __init__(self):
         super().__init__()
-        self.UIinit()
 
-    def UIinit(self):
-        self.vbox = QVBoxLayout()
-        self.fbox = QFormLayout()
+    def run(self):
+        while True:
+            user_input = input("Nhập dữ liệu từ bàn phím: ")
+            if user_input == "quit":
+                break
+            processed_data = user_input.upper()  # Xử lý dữ liệu (Ví dụ: đổi thành chữ hoa)
+            self.data_processed.emit(processed_data)
 
-        self.central_widget = QWidget()  # Tạo widget trung tâm
-        self.setCentralWidget(self.central_widget)  # Đặt widget trung tâm cho QMainWindow
 
-        self.l1 = QLabel(text="Hệ Thống Cửa Thông Minh")
-        self.l1.setStyleSheet("color: red")
-        self.f1 = QFont("Arial", 17)
-        self.f1.setBold(True)
-        self.l1.setFont(self.f1)
-        self.vbox.addWidget(self.l1)
+class Content1(QWidget):
+    def __init__(self):
+        super().__init__()
 
-        self.l2 = QLabel(text="Đăng nhập")
-        self.l2.setStyleSheet("color: #f58a42")
-        self.f2 = QFont("Arial", 15)
-        self.f2.setBold(True)
-        self.l2.setFont(self.f2)
-        self.vbox.addWidget(self.l2)
-        self.vbox.setAlignment(self.l2, Qt.AlignCenter)
+        self.layout = QVBoxLayout(self)
+        self.label = QLabel("Nhập dữ liệu từ bàn phím:", self)
+        self.layout.addWidget(self.label)
 
-        self.l3 = QLabel("Tài khoản: ")
-        self.f2.setBold(False)
-        self.f2.setPixelSize(18)
-        self.l3.setFont(self.f2)
-        self.text1 = QLineEdit()
-        self.text1.returnPressed.connect(self.button_click)  # Kết nối sự kiện returnPressed của QLineEdit với slot button_click
-        self.fbox.addRow(self.l3, self.text1)
-        self.vbox.addLayout(self.fbox)
+        self.worker_thread = WorkerThread()
+        self.worker_thread.data_processed.connect(self.update_label)
 
-        self.l4 = QLabel("Mật khẩu: ")
-        self.f2.setBold(False)
-        self.l4.setFont(self.f2)
-        self.text2 = QLineEdit()
-        self.text2.setEchoMode(QLineEdit.Password)
-        self.text2.returnPressed.connect(self.button_click)  # Kết nối sự kiện returnPressed của QLineEdit với slot button_click
-        self.fbox.addRow(self.l4, self.text2)
-        self.vbox.addLayout(self.fbox)
+    def start_processing(self):
+        self.worker_thread.start()
 
-        self.but1 = QPushButton(text="Xác nhận")
-        self.but1.setStyleSheet("color: #613b0a")
-        self.f2.setBold(True)
-        self.f2.setPixelSize(15)
-        self.but1.setFont(self.f2)
-        self.but1.setFixedSize(80, 40)
-        self.but1.clicked.connect(self.button_click)  # Kết nối sự kiện clicked của QPushButton với slot button_click
-        self.vbox.addWidget(self.but1)
-        self.vbox.setAlignment(self.but1, Qt.AlignCenter)
+    def update_label(self, processed_data):
+        self.label.setText("Dữ liệu đã xử lý: " + processed_data)
 
-        self.central_widget.setLayout(self.vbox)  # Đặt QVBoxLayout làm layout cho widget trung tâm
 
-        self.setWindowTitle("Hệ thống mở cửa thông minh")
-        self.setGeometry(750, 250, 400, 440)
-        self.show()
+class Content2(QWidget):
+    def __init__(self):
+        super().__init__()
 
-    @pyqtSlot()  # Chỉ định đây là một slot để được kết nối với sự kiện
-    def button_click(self):
-        self.input_text1 = self.text1.text()  # Lấy nội dung trong textbox
-        self.input_text2 = self.text2.text()  # Lấy nội dung trong textbox
-        print("user: ", self.input_text1)
-        print("password: ", self.input_text2)
+        self.layout = QVBoxLayout(self)
+        self.button = QPushButton("Lưu và hiển thị", self)
+        self.textbox = QLineEdit(self)
+        self.layout.addWidget(self.textbox)
+        self.layout.addWidget(self.button)
+
+        self.button.clicked.connect(self.save_and_display)
+
+    def save_and_display(self):
+        data = self.textbox.text()
+        print("Dữ liệu đã lưu: ", data)
+
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("Ứng dụng Desktop")
+        self.resize(400, 200)
+
+        self.toolbar = self.addToolBar('Công cụ')
+
+        self.button1 = self.toolbar.addAction("Mục 1")
+        self.button1.triggered.connect(self.show_content1)
+
+        self.button2 = self.toolbar.addAction("Mục 2")
+        self.button2.triggered.connect(self.show_content2)
+
+        self.content_widget = QWidget()
+        self.setCentralWidget(self.content_widget)
+
+        self.content_layout = QVBoxLayout(self.content_widget)
+
+        self.content1 = Content1()
+        self.content_layout.addWidget(self.content1)
+
+        self.content2 = Content2()
+        self.content_layout.addWidget(self.content2)
+
+        self.show_content1()
+
+    def show_content1(self):
+        self.content1.start_processing()
+        self.content1.show()
+        self.content2.hide()
+
+    def show_content2(self):
+        self.content1.hide()
+        self.content2.show()
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    my_app = LoginWindow()
+    window = MainWindow()
+    window.show()
     sys.exit(app.exec_())
