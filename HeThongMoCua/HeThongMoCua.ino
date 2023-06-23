@@ -60,7 +60,7 @@ bool setUpForSensor(int mode)
     else if (p == FINGERPRINT_NOFINGER)
     {
       // Serial.println("No finger detected");
-      Serial.println(dataOutput);
+      // Serial.println(dataOutput);
       delay(500);
     }
     else
@@ -128,7 +128,7 @@ bool deleteFingerprint()
   { // ID #0 not allowed, try again!
     // dataInput = Serial.read();
     // id = dataInput - '0';
-    id = Serial.parseInt();
+    id = Serial.readStringUntil('\n').toInt();
   }
 
   if (id >= 128){
@@ -179,7 +179,7 @@ bool getFingerprintEnroll()
   
   while (id == 0)
   { // ID #0 not allowed, try again!
-    id = Serial.parseInt();
+    id = Serial.readStringUntil('\n').toInt();
     Serial.print(id);
   }
 
@@ -235,6 +235,7 @@ void setup()
     // Init Servo in 15PIN:
   servo.attach(SERVO);
   delay(5);
+  Serial.println();
   login();
   // infoDetails();
 }
@@ -255,14 +256,15 @@ void loop() // run over and over again
   if (mode == 'd'){
     if (getFingerprintID())
     {
+      
       dataOutput = String(finger.fingerID) + " ";
-      (statusDoor % 2 == 0) ? dataOutput += "0" : dataOutput += "1";
+      (statusDoor % 2 == 0) ? dataOutput += "0" : dataOutput += "1";\
+      Serial.println(dataOutput);
       if (statusDoor % 2 == 0)
         controlServo("OFF");
       else
         controlServo("ON");
     }
-    Serial.println(dataOutput);
   }
     
   else if (mode == 'a')

@@ -20,7 +20,6 @@ class Add(QWidget):
         self.labelDeltaiId.setFont(self.f2)
         
         self.textDeltailId = QLineEdit()
-        self.textDeltailId.returnPressed.connect(self.put_id)
         self.textDeltailId.setFixedSize(70,30)
         
         self.fbox.addRow(self.labelDeltaiId, self.textDeltailId)
@@ -30,7 +29,6 @@ class Add(QWidget):
         self.but.move(150,250)
         self.but.setFont(self.f2)
         self.but.setFixedSize(80, 40)
-        self.but.clicked.connect(self.put_id)
 
         self.fbox.setFormAlignment(Qt.AlignHCenter)
         self.fbox.setFormAlignment(Qt.AlignVCenter)
@@ -42,10 +40,7 @@ class Add(QWidget):
         # self.central_widget.setLayout(self.vbox)
         # self.show()
         
-    def put_id(self):
-        self.idAdd = self.textDeltailId.text()
-        self.ser.write(b"")
-        print (self.idAdd)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

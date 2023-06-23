@@ -20,32 +20,30 @@ class Delete(QWidget):
         self.labelDetailIdDelete.setFont(self.f2)
         
         self.textDetailIdDelete = QLineEdit()
-        self.textDetailIdDelete.returnPressed.connect(self.get_id)
         self.textDetailIdDelete.setFixedSize(70,30)
         
         self.fbox.addRow(self.labelDetailIdDelete, self.textDetailIdDelete)
 
-        
         self.but = QPushButton("Gửi", self)
         self.but.move(150,250)
         self.but.setFont(self.f2)
         self.but.setFixedSize(80, 40)
-        self.but.clicked.connect(self.get_id)
+        
+        # self.desc = QLabel("78687")
+        # self.desc.setStyleSheet("color: red")
 
         self.fbox.setFormAlignment(Qt.AlignHCenter)
         self.fbox.setFormAlignment(Qt.AlignVCenter)
 
         self.vbox.addLayout(self.fbox)
+        self.vbox.addWidget(self.but)
+        # self.vbox.addWidget(self.desc)
+        
         self.setLayout(self.vbox)
         # self.setGeometry(750, 250, 400, 440)
         # self.setWindowTitle("Hệ thống mở cửa thông minh")
         # self.central_widget.setLayout(self.vbox)
         # self.show()
-        
-    def get_id(self):
-        self.idDelete = self.textDetailIdDelete.text()
-        self.ser.write(b"")
-        print (self.idDelete)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

@@ -9,14 +9,21 @@ from app.modules import *
 from app.cua_thong_minh import *
 from app.loading import *
 
-class MySleep(QThread):
-    def __init__(self,smartDoor):
+class InputThread(QThread):
+    def __init__(self, ser) -> None:
         super().__init__()
-        self.smartDoor = smartDoor
+        self.ser = ser
+        
+    input = pyqtSignal(str)
+    
     def run(self):
-        self.smartDoor.set_loading_state()
-        self.sleep(2)  # Đặt độ trễ 2 giây (2000 ms)
-        # Thực hiện các tác vụ sau độ trễ
+        while True:
+            if self.ser.in_waiting  > 0:
+                try:
+                    key = self.ser.readline().decode().strip()
+                    self.input.emit(key)
+                except:
+                    print("loi")
 
 class SmartDoor(QMainWindow):
     def __init__(self):
@@ -62,13 +69,27 @@ class SmartDoor(QMainWindow):
         
         self.add = Add(self.ser)
         self.content_layout.addWidget(self.add)
+        self.add.but.clicked.connect(lambda : self.put_id(self.add))
         
         self.delete = Delete(self.ser)
         self.content_layout.addWidget(self.delete)
+        self.delete.but.clicked.connect(lambda : self.put_id(self.delete))
         
         self.loadingPage = LoadingWidget()
-        self.sleep = MySleep(self)
+        self.content_layout.addWidget(self.loadingPage)
+        
+        self.timer = QTimer()
+        self.queueMain = queue.Queue()
+        self.mainData = ""
 
+        #Thực hiện xử lý hiển thị
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update)
+        self.timer.start()
+        self.threadInput = InputThread(self.ser)
+        self.threadInput.input.connect(self.processInput)
+        self.threadInput.start()
+        
         self.switchToWindowLogin()
 
     def switchToWindowLogin(self):
@@ -80,29 +101,47 @@ class SmartDoor(QMainWindow):
         self.details.hide()
         self.add.hide()
         self.delete.hide()
+        self.loadingPage.hide()
         self.show()
         
     def switchToDetails(self):
-        self.toolbar.show()
-        self.login.hide()
-        self.details.show()
-        self.add.hide()
-        self.delete.hide()
-        self.show()
+        self.loadingPage.details.hide()
+        self.set_loading_state()
+        QTimer.singleShot(1000, self.DetailsON)
     def switchToWindowDelete(self):
+        self.ser.write(b'r')
+        self.loadingPage.details.setText("Vui lòng xác thực vân tay trong vòng 5 giây...")
+        self.loadingPage.details.show() 
+        self.set_loading_state()
+        QTimer.singleShot(5000, self.DeleteON)
+    def switchToWindowAdd(self):
+        self.ser.write(b'a')
+        self.loadingPage.details.setText("Vui lòng xác thực vân tay trong vòng 5 giây...")
+        self.loadingPage.details.show()
+        self.set_loading_state()
+        QTimer.singleShot(5000, self.AddON)
+        
+    def DeleteON(self):
         self.toolbar.show()
         self.login.hide()
         self.details.hide()
         self.add.hide()
         self.delete.show()
-        self.show()
-    def switchToWindowAdd(self):
+        self.loadingPage.hide()
+    def AddON(self):
         self.toolbar.show()
         self.login.hide()
         self.details.hide()
         self.add.show()
         self.delete.hide()
-        self.show()
+        self.loadingPage.hide()
+    def DetailsON(self):
+        self.toolbar.show()
+        self.login.hide()
+        self.details.show()
+        self.add.hide()
+        self.delete.hide()
+        self.loadingPage.hide()
         
     def get_info(self):
         
@@ -115,10 +154,63 @@ class SmartDoor(QMainWindow):
         else:
             self.login.info.setText("Sai tài khoản hoặc mật khẩu!")
     def set_loading_state(self):
-        self.update_content_widget(self.loadingPage)
-
-    def update_content_widget(self, widget):
-        self.setCentralWidget(widget)
+        # self.setCentralWidget(self.loadingPage)
+        self.toolbar.hide()
+        self.login.hide()
+        self.details.hide()
+        self.add.hide()
+        self.delete.hide()
+        self.loadingPage.show()
+        self.show()
+        
+    def processInput(self, key):
+        self.queueMain.put(key) 
+    def update(self):
+        if not self.queueMain.empty():
+            self.mainData = self.queueMain.get()
+            while True:
+                try:
+                    if (self.mainData[len(self.mainData)-1] == "0"):
+                        self.details.statusDoor.setText("Đóng")
+                        self.details.labelDetailIdDoor.setText("ID vân tay đóng cửa: ") 
+                    else:
+                        self.details.statusDoor.setText("Mở")
+                        self.details.labelDetailIdDoor.setText("ID vân tay mở cửa: ")
+                        
+                    self.details.id.setText(self.mainData[0])
+                    break
+                except:
+                    print("ko co du lieu!")
+                    
+    def put_id(self, page):
+        if page == self.add:
+            print('add')
+            data = self.add.textDeltailId.text() + '\n'
+            self.ser.write(data.encode())
+            self.loadingPage.details.setText("Xác nhận vân tay đăng ký 2 lần trước khi chuyển trang sau 10s...")
+            self.loadingPage.details.show()
+            self.set_loading_state()
+            self.ser.write(b'121234\n')
+            QTimer.singleShot(14000,self.switchToDetails)
+            
+        elif page == self.delete:
+            print('delete')
+            data = self.delete.textDetailIdDelete.text() +'\n'
+            self.ser.write(data.encode())
+            # if (self.mainData == '0'):
+            #     print('0')
+            #     self.delete.desc.setText("Xóa không thành công")
+            #     self.delete.desc.show()
+            # elif (self.mainData == '1'):
+            #     print('1')
+            #     self.delete.desc.setText("Xóa thành công")
+            #     self.delete.desc.show()
+            self.ser.write(b'121234\n')
+            QTimer.singleShot(4000,self.switchToDetails)
+            
+            
+                
+            
 
 if __name__ == "__main__" :
     app = QApplication(sys.argv)

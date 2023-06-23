@@ -1,7 +1,7 @@
 #include <Servo.h>
 
 static const int servoPin = 12;
-char data;
+String data;
 int curPos = 0, pos = 180, temp;
 Servo servo;
 
@@ -38,8 +38,8 @@ void loop()
 {
   if (Serial.available() > 0)
   {
-    data = Serial.read();
-    if (data == 'a')
+    data = Serial.readStringUntil('\n');
+    if (data.toInt() >= 128)
     {
       controlServo("ON");
     }
