@@ -1,9 +1,7 @@
-
-import sys, queue
+import sys
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QFormLayout, QVBoxLayout
-from PyQt5.QtCore import  Qt, pyqtSignal, QThread, QTimer
-from . import modules
+from PyQt5.QtCore import  Qt
 
 class Details(QWidget):
     def __init__(self, ser) -> None:

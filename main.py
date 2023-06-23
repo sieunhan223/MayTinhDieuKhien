@@ -1,13 +1,11 @@
-import time
-import sys
+import sys, serial, queue
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QMainWindow, QAction
-from PyQt5.QtGui import QMovie
-from app.login import *
-from app.xoa_van_tay import *
-from app.them_van_tay import * 
-from app.modules import *
-from app.cua_thong_minh import *
-from app.loading import *
+from PyQt5.QtCore import pyqtSignal, QThread, QTimer
+from modules.login import *
+from modules.xoa_van_tay import *
+from modules.them_van_tay import * 
+from modules.cua_thong_minh import *
+from modules.loading import *
 
 class InputThread(QThread):
     def __init__(self, ser) -> None:
@@ -197,20 +195,8 @@ class SmartDoor(QMainWindow):
             print('delete')
             data = self.delete.textDetailIdDelete.text() +'\n'
             self.ser.write(data.encode())
-            # if (self.mainData == '0'):
-            #     print('0')
-            #     self.delete.desc.setText("Xóa không thành công")
-            #     self.delete.desc.show()
-            # elif (self.mainData == '1'):
-            #     print('1')
-            #     self.delete.desc.setText("Xóa thành công")
-            #     self.delete.desc.show()
             self.ser.write(b'121234\n')
             QTimer.singleShot(4000,self.switchToDetails)
-            
-            
-                
-            
 
 if __name__ == "__main__" :
     app = QApplication(sys.argv)

@@ -1,9 +1,7 @@
 import sys
-import typing
-from PyQt5.QtCore import  Qt, QThread, pyqtSignal
+from PyQt5.QtCore import  Qt
 from PyQt5.QtGui import QMovie
-from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow, QWidget, QVBoxLayout
-
+from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout
 
 class LoadingWidget(QWidget):
     def __init__(self):

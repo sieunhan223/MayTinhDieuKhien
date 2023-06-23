@@ -6,12 +6,13 @@
 Servo servo;
 int pos;
 int curPos;
-Adafruit_Fingerprint finger = Adafruit_Fingerprint(&Serial2);
 
+Adafruit_Fingerprint finger = Adafruit_Fingerprint(&Serial2);
 int id, statusDoor = 0;
 char dataInput, mode = 'd';
 String dataOutput = "0 0";
 uint8_t p;
+
 void login()
 {
   if (!finger.verifyPassword())
@@ -20,7 +21,6 @@ void login()
     delay(100);
     ESP.restart();
   }
-
 }
 
 // Hàm sử dụng servo:
@@ -131,9 +131,10 @@ bool deleteFingerprint()
     id = Serial.readStringUntil('\n').toInt();
   }
 
-  if (id >= 128){
-      delay(1000);
-      ESP.restart();
+  if (id >= 128)
+  {
+    delay(1000);
+    ESP.restart();
   }
 
   // Serial.print("Deleting ID #");
@@ -150,7 +151,6 @@ bool deleteFingerprint()
     return true;
   }
   return false;
-  
 }
 
 bool getFingerprintID()
@@ -176,16 +176,17 @@ bool getFingerprintID()
 
 bool getFingerprintEnroll()
 {
-  
+
   while (id == 0)
   { // ID #0 not allowed, try again!
     id = Serial.readStringUntil('\n').toInt();
     Serial.print(id);
   }
 
-  if (id >= 128){
-      delay(1000);
-      ESP.restart();
+  if (id >= 128)
+  {
+    delay(1000);
+    ESP.restart();
   }
 
   p = -1;
@@ -218,7 +219,7 @@ bool getFingerprintEnroll()
 
   if (p != FINGERPRINT_OK)
   {
-    
+
     // Serial.println("Unknown error");
     return false;
   }
@@ -232,7 +233,7 @@ void setup()
   Serial.begin(9600);
   // set the data rate for the sensor serial port
   finger.begin(57600);
-    // Init Servo in 15PIN:
+  // Init Servo in 15PIN:
   servo.attach(SERVO);
   delay(5);
   Serial.println();
@@ -247,18 +248,18 @@ void loop() // run over and over again
   {
     delay(1000);
     dataInput = Serial.read();
-    if ((dataInput == 'r') || (dataInput == 'a') || (dataInput =='d'))
+    if ((dataInput == 'r') || (dataInput == 'a') || (dataInput == 'd'))
       mode = dataInput;
     delay(1000);
   }
 
-
-  if (mode == 'd'){
+  if (mode == 'd')
+  {
     if (getFingerprintID())
     {
-      
+
       dataOutput = String(finger.fingerID) + " ";
-      (statusDoor % 2 == 0) ? dataOutput += "0" : dataOutput += "1";\
+      (statusDoor % 2 == 0) ? dataOutput += "0" : dataOutput += "1";
       Serial.println(dataOutput);
       if (statusDoor % 2 == 0)
         controlServo("OFF");
@@ -266,14 +267,15 @@ void loop() // run over and over again
         controlServo("ON");
     }
   }
-    
+
   else if (mode == 'a')
   {
     if (getFingerprintEnroll())
     {
       Serial.println("1");
     }
-    else Serial.println("0");
+    else
+      Serial.println("0");
   }
   else if (mode == 'r')
   {
@@ -281,7 +283,8 @@ void loop() // run over and over again
     {
       Serial.println("1");
     }
-    else Serial.println("0");
+    else
+      Serial.println("0");
   }
 
   delay(50); // don't ned to run this at full speed.

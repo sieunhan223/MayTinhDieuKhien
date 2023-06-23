@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QApplication, QLabel, QLineEdit, QPushButton, QWidget, QFormLayout, QVBoxLayout, QMainWindow
+from PyQt5.QtWidgets import QApplication, QLabel, QLineEdit, QPushButton, QWidget, QFormLayout, QVBoxLayout
 from PyQt5.QtCore import Qt
 
 class Delete(QWidget):
@@ -40,10 +40,6 @@ class Delete(QWidget):
         # self.vbox.addWidget(self.desc)
         
         self.setLayout(self.vbox)
-        # self.setGeometry(750, 250, 400, 440)
-        # self.setWindowTitle("Hệ thống mở cửa thông minh")
-        # self.central_widget.setLayout(self.vbox)
-        # self.show()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

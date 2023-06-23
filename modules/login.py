@@ -2,7 +2,6 @@ import sys
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QApplication, QLabel, QLineEdit, QPushButton, QFormLayout, QVBoxLayout, QWidget
 from PyQt5.QtCore import Qt
-from . import cua_thong_minh
 
 class LoginWindow(QWidget):
     def __init__(self, ser) -> None:
@@ -62,9 +61,6 @@ class LoginWindow(QWidget):
         
         self.setLayout(self.vbox) 
 
-        # self.setWindowTitle("Hệ thống mở cửa thông minh")
-        # self.setGeometry(750, 250, 400, 440)
-        # self.show()
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     my_app = LoginWindow()
