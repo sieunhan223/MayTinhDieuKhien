@@ -1,42 +1,36 @@
 #include <Adafruit_Fingerprint.h>
 #include <Servo.h>
 
-Adafruit_Fingerprint finger = Adafruit_Fingerprint(&Serial2);
-int mode = 0, id, statusDoor = 0;
-String data = "";
-uint8_t p;
+#define SERVO 12
 
-// Servo motor constructor
-Servo myservo;
+Servo servo;
 int pos;
 int curPos;
+Adafruit_Fingerprint finger = Adafruit_Fingerprint(&Serial2);
 
+int id, statusDoor = 0;
+char dataInput, mode = 'd';
+String dataOutput = "0 0";
+uint8_t p;
 void login()
 {
-  // if (finger.verifyPassword())
-  // {
-  //   Serial.println("Found fingerprint sensor!");
-  // }
-  // else
-  // {
-  //   Serial.println("Did not find fingerprint sensor :(");
-  //   delay(1000);
-  //   ESP.restart();
-  // }
-  if (!finger.verifyPassword()){
-    delay(1000);
+  if (!finger.verifyPassword())
+  {
+    // Serial.println("Found fingerprint sensor!");
+    delay(100);
     ESP.restart();
   }
+
 }
 
 // Hàm sử dụng servo:
-void controlServo(int status)
+void controlServo(String status)
 {
-  if (status == 1)
+  if (status == "ON")
   {
     for (pos = curPos; pos <= 130; pos++)
     {
-      myservo.write(pos);
+      servo.write(pos);
       delay(10);
     }
     curPos = 130;
@@ -45,7 +39,7 @@ void controlServo(int status)
   {
     for (pos = curPos; pos >= 0; pos--)
     {
-      myservo.write(pos);
+      servo.write(pos);
       delay(10);
     }
     curPos = 0;
@@ -63,28 +57,17 @@ bool setUpForSensor(int mode)
       // Serial.println("Image taken");
       break;
     }
+    else if (p == FINGERPRINT_NOFINGER)
+    {
+      // Serial.println("No finger detected");
+      Serial.println(dataOutput);
+      delay(500);
+    }
     else
+    {
+      // Serial.println("Unknown error");
       return false;
-    // else if (p == FINGERPRINT_NOFINGER)
-    // {
-    //   // Serial.println("No finger detected");
-    //   delay(500);
-    // }
-    // else if (p == FINGERPRINT_PACKETRECIEVEERR)
-    // {
-    //   Serial.println("Communication error");
-    //   return false;
-    // }
-    // else if (p == FINGERPRINT_IMAGEFAIL)
-    // {
-    //   Serial.println("Imaging error");
-    //   return false;
-    // }
-    // else
-    // {
-    //   Serial.println("Unknown error");
-    //   return false;
-    // }
+    }
   }
   // OK success!
   if (mode == 1)
@@ -99,32 +82,9 @@ bool setUpForSensor(int mode)
     return true;
   }
   else
+  {
     return false;
-  // else if (p == FINGERPRINT_IMAGEMESS)
-  // {
-  //   Serial.println("Image too messy");
-  //   return false;
-  // }
-  // else if (p == FINGERPRINT_PACKETRECIEVEERR)
-  // {
-  //   Serial.println("Communication error");
-  //   return false;
-  // }
-  // else if (p == FINGERPRINT_FEATUREFAIL)
-  // {
-  //   Serial.println("Could not find fingerprint features");
-  //   return false;
-  // }
-  // else if (p == FINGERPRINT_INVALIDIMAGE)
-  // {
-  //   Serial.println("Could not find fingerprint features");
-  //   return false;
-  // }
-  // else
-  // {
-  //   Serial.println("Unknown error");
-  //   return false;
-  // }
+  }
 }
 
 void infoDetails()
@@ -163,20 +123,24 @@ void infoDetails()
 bool deleteFingerprint()
 {
   p = -1;
-  // Serial.println("Ready to delete a fingerprint!");
-  // Serial.println("Please type in the ID # (from 1 to 127) you want to delete this finger as...");
 
   while (id == 0)
   { // ID #0 not allowed, try again!
+    // dataInput = Serial.read();
+    // id = dataInput - '0';
     id = Serial.parseInt();
   }
+
+  if (id >= 128){
+      delay(1000);
+      ESP.restart();
+  }
+
   // Serial.print("Deleting ID #");
   // Serial.println(id);
   p = finger.deleteModel(id);
-  delay(1000);
 
-
-
+  id = 0;
   if (p == FINGERPRINT_OK)
   {
     // Serial.println("Deleted!");
@@ -185,98 +149,56 @@ bool deleteFingerprint()
     // Serial.println(" templates");
     return true;
   }
-  else
-    return false;
-  // else if (p == FINGERPRINT_PACKETRECIEVEERR)
-  // {
-  //   Serial.println("Communication error");
-  //   return false;
-  // }
-  // else if (p == FINGERPRINT_BADLOCATION)
-  // {
-  //   Serial.println("Could not delete in that location");
-  //   return false;
-  // }
-  // else if (p == FINGERPRINT_FLASHERR)
-  // {
-  //   Serial.println("Error writing to flash");
-  //   return false;
-  // }
-  // else
-  // {
-  //   Serial.print("Unknown error: 0x");
-  //   Serial.println(p, HEX);
-  //   return false;
-  // }
+  return false;
+  
 }
 
 bool getFingerprintID()
 {
   if (!setUpForSensor(0))
-    return 999;
+    return false;
   // OK converted!
   p = finger.fingerSearch();
-  if (p == FINGERPRINT_OK)
+  if (p != FINGERPRINT_OK)
   {
-    // Serial.println("Found a print match!");
-    id = finger.fingerID;
-    statusDoor ++;
-    return true;
-  }
-  else
+    // Serial.println("Unknown error");
     return false;
-  // else if (p == FINGERPRINT_PACKETRECIEVEERR)
-  // {
-  //   Serial.println("Communication error");
-  //   return 999;
-  // }
-  // else if (p == FINGERPRINT_NOTFOUND)
-  // {
-  //   Serial.println("Did not find a match");
-  //   return 999;
-  // }
-  // else
-  // {
-  //   Serial.println("Unknown error");
-  //   return 999;
-  // }
+  }
+  // Serial.println("Found a print match!");
   // found a match!
   // Serial.print("Found ID #");
   // Serial.print(finger.fingerID);
-  
   // Serial.print(" with confidence of ");
   // Serial.println(finger.confidence);
+  statusDoor++;
+  return true;
 }
 
 bool getFingerprintEnroll()
 {
-  // Serial.println("Ready to enroll a fingerprint!");
-  // Serial.println("Please type in the ID # (from 1 to 127) you want to save this finger as...");
-
+  
   while (id == 0)
   { // ID #0 not allowed, try again!
     id = Serial.parseInt();
+    Serial.print(id);
   }
-  // Serial.print("Enrolling ID #");
-  // Serial.println(id);
 
-  // Serial.print("Waiting for valid finger to enroll as #");
-  // Serial.println(id);
+  if (id >= 128){
+      delay(1000);
+      ESP.restart();
+  }
+
   p = -1;
   if (!setUpForSensor(1))
     return false;
 
-  // Serial.println("Remove finger");
   delay(2000);
   p = 0;
   while (p != FINGERPRINT_NOFINGER)
   {
     p = finger.getImage();
   }
-  // Serial.print("ID ");
-  // Serial.println(id);
   p = -1;
-  // Serial.println("Place same finger again");
 
   if (!setUpForSensor(2))
     return false;
@@ -284,101 +206,80 @@ bool getFingerprintEnroll()
   // OK converted!
   // Serial.print("Creating model for #");
   // Serial.println(id);
-  delay(1000);
 
   p = finger.createModel();
-  if (p == FINGERPRINT_OK)
+  if (p != FINGERPRINT_OK)
   {
-    // Serial.println("Prints matched!");
-    return true;
-  }
-  else
+    // Serial.println("Unknown error");
     return false;
-  // else if (p == FINGERPRINT_PACKETRECIEVEERR)
-  // {
-  //   Serial.println("Communication error");
-  //   return false;
-  // }
-  // else if (p == FINGERPRINT_ENROLLMISMATCH)
-  // {
-  //   Serial.println("Fingerprints did not match");
-  //   return false;
-  // }
-  // else
-  // {
-  //   Serial.println("Unknown error");
-  //   return false;
-  // }
+  }
 
-  // Serial.print("ID ");
-  // Serial.println(id);
   p = finger.storeModel(id);
-  if (p == FINGERPRINT_OK)
-  {
-    // Serial.println("Stored!");
-    return true;
-  }
-  else
-    return false;
-  // else if (p == FINGERPRINT_PACKETRECIEVEERR)
-  // {
-  //   Serial.println("Communication error");
-  //   return false;
-  // }
-  // else if (p == FINGERPRINT_BADLOCATION)
-  // {
-  //   Serial.println("Could not store in that location");
-  //   return false;
-  // }
-  // else if (p == FINGERPRINT_FLASHERR)
-  // {
-  //   Serial.println("Error writing to flash");
-  //   return false;
-  // }
-  // else
-  // {
-  //   Serial.println("Unknown error");
-  //   return false;
-  // }
 
-  
+  if (p != FINGERPRINT_OK)
+  {
+    
+    // Serial.println("Unknown error");
+    return false;
+  }
+  // Serial.println("Stored!");
+  id = 0;
+  return true;
 }
 
 void setup()
 {
   Serial.begin(9600);
-  // Serial.println("\n\nAdafruit finger detect test");
   // set the data rate for the sensor serial port
   finger.begin(57600);
+    // Init Servo in 15PIN:
+  servo.attach(SERVO);
   delay(5);
   login();
   // infoDetails();
-  statusDoor = 0;
 }
 
 void loop() // run over and over again
 {
-  if (mode == 0){
-    if (getFingerprintID()){
-      data = String(id) + " ";
-      (statusDoor % 2 == 0) ? data += "0" : data += "1";
-      Serial.println(data);
-    }
-    else{
-      Serial.println(data);
-    }
-  }
-  else if (mode == 1)
+
+  if (Serial.available() > 0)
   {
-    while (!getFingerprintEnroll())
+    delay(1000);
+    dataInput = Serial.read();
+    if ((dataInput == 'r') || (dataInput == 'a') || (dataInput =='d'))
+      mode = dataInput;
+    delay(1000);
+  }
+
+
+  if (mode == 'd'){
+    if (getFingerprintID())
     {
-      Serial.println("0");
+      dataOutput = String(finger.fingerID) + " ";
+      (statusDoor % 2 == 0) ? dataOutput += "0" : dataOutput += "1";
+      if (statusDoor % 2 == 0)
+        controlServo("OFF");
+      else
+        controlServo("ON");
     }
-    Serial.println("1");
+    Serial.println(dataOutput);
   }
-  else if (mode == 2)
+    
+  else if (mode == 'a')
   {
-    deleteFingerprint() ? Serial.println("1") : Serial.println("0");
+    if (getFingerprintEnroll())
+    {
+      Serial.println("1");
+    }
+    else Serial.println("0");
+  }
+  else if (mode == 'r')
+  {
+    if (deleteFingerprint())
+    {
+      Serial.println("1");
+    }
+    else Serial.println("0");
   }
 
   delay(50); // don't ned to run this at full speed.

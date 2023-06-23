@@ -5,8 +5,9 @@ from PyQt5.QtCore import Qt
 from . import modules
 
 class Add(QWidget):
-    def __init__(self): 
+    def __init__(self, ser): 
         super().__init__()
+        self.ser = ser
         self.UIInit()
 
     def UIInit(self):        
@@ -42,10 +43,8 @@ class Add(QWidget):
         # self.show()
         
     def put_id(self):
-        ser = modules.DeviceConnect("COM7", 9600)
-        ser.write(b"")
         self.idAdd = self.textDeltailId.text()
-        
+        self.ser.write(b"")
         print (self.idAdd)
 
 if __name__ == "__main__":

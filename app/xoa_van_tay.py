@@ -4,8 +4,9 @@ from PyQt5.QtWidgets import QApplication, QLabel, QLineEdit, QPushButton, QWidge
 from PyQt5.QtCore import Qt
 
 class Delete(QWidget):
-    def __init__(self): 
+    def __init__(self, ser): 
         super().__init__()
+        self.ser = ser
         self.UIInit()
 
     def UIInit(self):
@@ -43,6 +44,7 @@ class Delete(QWidget):
         
     def get_id(self):
         self.idDelete = self.textDetailIdDelete.text()
+        self.ser.write(b"")
         print (self.idDelete)
 
 if __name__ == "__main__":

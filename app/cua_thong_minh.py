@@ -12,10 +12,13 @@ class DeltaisThread(QThread):
     
     def run(self):
         while True:
-            key = self.ser.readline().decode().strip()
-            self.input.emit(key)
-    
-
+            while True:
+                try: 
+                    key = self.ser.readline().decode().strip()
+                    self.input.emit(key)
+                    break
+                except:
+                    print("Đang restart...")
 class Details(QWidget):
     def __init__(self, ser) -> None:
         super().__init__()
@@ -52,7 +55,6 @@ class Details(QWidget):
         self.threadInput.input.connect(self.processInput)
         self.threadInput.start()
         
-        
         self.fbox.setFormAlignment(Qt.AlignHCenter)
         self.fbox.setFormAlignment(Qt.AlignVCenter)
         
@@ -64,8 +66,14 @@ class Details(QWidget):
     def update(self):
         if not self.queueMain.empty():
             data = self.queueMain.get()
-            self.statusDoor.setText("Đóng" if (data[1] == "0") else "Mở")
-            self.id.setText(data[0])
+            while True:
+                try:
+                    self.statusDoor.setText("Đóng" if (data[len(data)-1] == "0") else "Mở")
+                    self.id.setText(data[0])
+                    break
+                except:
+                    print("ko co du lieu!")
+                
 if __name__ == "__main__" :
     app = QApplication(sys.argv)
     my_app = Details()
