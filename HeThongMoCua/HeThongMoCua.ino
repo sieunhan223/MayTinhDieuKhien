@@ -53,21 +53,11 @@ bool setUpForSensor(int mode)
   {
     p = finger.getImage();
     if (p == FINGERPRINT_OK)
-    {
-      // Serial.println("Image taken");
       break;
-    }
     else if (p == FINGERPRINT_NOFINGER)
-    {
-      // Serial.println("No finger detected");
-      // Serial.println(dataOutput);
       delay(500);
-    }
     else
-    {
-      // Serial.println("Unknown error");
       return false;
-    }
   }
   // OK success!
   if (mode == 1)
@@ -77,14 +67,9 @@ bool setUpForSensor(int mode)
   else
     p = finger.image2Tz();
   if (p == FINGERPRINT_OK)
-  {
-    // Serial.println("Image converted");
     return true;
-  }
   else
-  {
     return false;
-  }
 }
 
 void infoDetails()
@@ -126,30 +111,20 @@ bool deleteFingerprint()
 
   while (id == 0)
   { // ID #0 not allowed, try again!
-    // dataInput = Serial.read();
-    // id = dataInput - '0';
     id = Serial.readStringUntil('\n').toInt();
   }
 
-  if (id >= 128)
+  if (id >= 51)
   {
     delay(1000);
     ESP.restart();
   }
 
-  // Serial.print("Deleting ID #");
-  // Serial.println(id);
   p = finger.deleteModel(id);
 
   id = 0;
   if (p == FINGERPRINT_OK)
-  {
-    // Serial.println("Deleted!");
-    // Serial.print("Sensor contains ");
-    // Serial.print(finger.templateCount);
-    // Serial.println(" templates");
     return true;
-  }
   return false;
 }
 
@@ -157,19 +132,9 @@ bool getFingerprintID()
 {
   if (!setUpForSensor(0))
     return false;
-  // OK converted!
   p = finger.fingerSearch();
   if (p != FINGERPRINT_OK)
-  {
-    // Serial.println("Unknown error");
     return false;
-  }
-  // Serial.println("Found a print match!");
-  // found a match!
-  // Serial.print("Found ID #");
-  // Serial.print(finger.fingerID);
-  // Serial.print(" with confidence of ");
-  // Serial.println(finger.confidence);
   statusDoor++;
   return true;
 }
@@ -183,7 +148,7 @@ bool getFingerprintEnroll()
     Serial.print(id);
   }
 
-  if (id >= 128)
+  if (id >= 51)
   {
     delay(1000);
     ESP.restart();
@@ -196,34 +161,20 @@ bool getFingerprintEnroll()
   delay(2000);
   p = 0;
   while (p != FINGERPRINT_NOFINGER)
-  {
     p = finger.getImage();
-  }
   p = -1;
 
   if (!setUpForSensor(2))
     return false;
 
-  // OK converted!
-  // Serial.print("Creating model for #");
-  // Serial.println(id);
-
   p = finger.createModel();
   if (p != FINGERPRINT_OK)
-  {
-    // Serial.println("Unknown error");
     return false;
-  }
 
   p = finger.storeModel(id);
 
   if (p != FINGERPRINT_OK)
-  {
-
-    // Serial.println("Unknown error");
     return false;
-  }
-  // Serial.println("Stored!");
   id = 0;
   return true;
 }

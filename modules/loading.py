@@ -10,7 +10,7 @@ class LoadingWidget(QWidget):
         self.details = QLabel()
         self.details.setStyleSheet("color :red")
         self.loading_label = QLabel()
-        self.loading_movie = QMovie("E:\DaiHoc\Hệ thống máy tính điều khiển\\app\loading.gif")
+        self.loading_movie = QMovie("E:\DaiHoc\Hệ thống máy tính điều khiển\modules\loading.gif")
         self.loading_label.setMovie(self.loading_movie)
         self.loading_movie.start()
 
